@@ -1,11 +1,11 @@
--- LocalScript - Speed 1000 com verificação de time
+-- LocalScript - Speed 1000 com verificação de time funcional
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-local allowedTeam = "Testadores" -- Altere aqui para o nome exato do time
-local speedValue = 1000
-local defaultSpeed = 16
+local allowedTeamName = "Testadores" -- Nome EXATO do time permitido
+local speedOn = 1000
+local speedOff = 16
 
 -- GUI
 local screenGui = Instance.new("ScreenGui")
@@ -27,39 +27,45 @@ button.Parent = screenGui
 local uiCorner = Instance.new("UICorner", button)
 uiCorner.CornerRadius = UDim.new(0, 12)
 
-local toggle = false
+local speedAtivo = false
 
--- Função para alterar velocidade
-local function setSpeed(speed)
+local function alterarVelocidade(valor)
 	local char = player.Character or player.CharacterAdded:Wait()
 	local humanoid = char:FindFirstChildWhichIsA("Humanoid")
 	if humanoid then
-		humanoid.WalkSpeed = speed
+		humanoid.WalkSpeed = valor
 	end
 end
 
--- Botão de controle
+local function verificarTime()
+	-- Verifica se o jogador está em um time e compara com o nome esperado
+	local team = player.Team
+	return team and team.Name == allowedTeamName
+end
+
 button.MouseButton1Click:Connect(function()
-	if not player.Team or player.Team.Name ~= allowedTeam then
-		button.Text = "Time Incorreto!"
+	if not verificarTime() then
+		button.Text = "Acesso Negado!"
 		wait(1.5)
-		button.Text = toggle and "Desativar Speed" or "Ativar Speed 1000"
+		button.Text = speedAtivo and "Desativar Speed" or "Ativar Speed 1000"
 		return
 	end
 
-	toggle = not toggle
-	if toggle then
-		setSpeed(speedValue)
+	speedAtivo = not speedAtivo
+	if speedAtivo then
+		alterarVelocidade(speedOn)
 		button.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 		button.Text = "Desativar Speed"
 	else
-		setSpeed(defaultSpeed)
+		alterarVelocidade(speedOff)
 		button.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
 		button.Text = "Ativar Speed 1000"
 	end
 end)
 
--- Resetar velocidade quando respawnar
 player.CharacterAdded:Connect(function(char)
-	char:WaitForChild("Humanoid").WalkSpeed = toggle and speedValue or defaultSpeed
+	local humanoid = char:WaitForChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = speedAtivo and speedOn or speedOff
+	end
 end)
